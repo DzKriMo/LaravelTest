@@ -8,8 +8,9 @@
 </head>
 <body>
 <div class="container mt-5">
-    <h2>Product Inventory Form</h2>
+    <h2>Product Inventory</h2>
 
+    
     <form id="productForm" class="mb-4">
         @csrf
         <div class="mb-3">
@@ -40,7 +41,7 @@
             </tr>
         </thead>
         <tbody>
-           
+            
         </tbody>
         <tfoot>
             <tr>
@@ -50,15 +51,45 @@
             </tr>
         </tfoot>
     </table>
+
+    <!-- Edit Product Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Edit Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        @csrf
+                        <input type="hidden" id="editProductId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Product Name</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editQuantity" class="form-label">Quantity in Stock</label>
+                            <input type="number" class="form-control" id="editQuantity" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPrice" class="form-label">Price per Item</label>
+                            <input type="number" step="0.01" class="form-control" id="editPrice" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     $(document).ready(function() {
-        // Load initial product data
         loadProducts();
 
-        // Handle form submission
         $('#productForm').on('submit', function(event) {
             event.preventDefault();
 
@@ -91,7 +122,8 @@
                             <td>${new Date(product.created_at).toLocaleString()}</td>
                             <td>${totalValue.toFixed(2)}</td>
                             <td>
-                                <button class="btn btn-sm btn-warning edit-btn" data-id="${product.id}">Edit</button>
+                                <button class="btn btn-sm btn-warning edit-btn" data-id="${product.id}" data-name="${product.name}" data-quantity="${product.quantity}" data-price="${product.price}">Edit</button>
+                                <button class="btn btn-sm btn-danger delete-btn" data-id="${product.id}">Delete</button>
                             </td>
                         </tr>
                     `);
@@ -100,6 +132,48 @@
                 $('#totalSum').text(totalSum.toFixed(2));
             });
         }
+
+        $(document).on('click', '.edit-btn', function() {
+            $('#editProductId').val($(this).data('id'));
+            $('#editName').val($(this).data('name'));
+            $('#editQuantity').val($(this).data('quantity'));
+            $('#editPrice').val($(this).data('price'));
+
+            $('#editModal').modal('show');
+        });
+
+        $('#editForm').on('submit', function(event) {
+            event.preventDefault();
+            let id = $('#editProductId').val();
+
+            $.ajax({
+                url: `/products/${id}`,
+                method: 'PUT',
+                data: {
+                    _token: $('input[name="_token"]').val(),
+                    name: $('#editName').val(),
+                    quantity: $('#editQuantity').val(),
+                    price: $('#editPrice').val()
+                },
+                success: function(response) {
+                    $('#editModal').modal('hide');
+                    loadProducts();
+                }
+            });
+        });
+
+        $(document).on('click', '.delete-btn', function() {
+            let id = $(this).data('id');
+
+            $.ajax({
+                url: `/products/${id}`,
+                method: 'DELETE',
+                data: { _token: $('input[name="_token"]').val() },
+                success: function(response) {
+                    loadProducts();
+                }
+            });
+        });
     });
 </script>
 </body>

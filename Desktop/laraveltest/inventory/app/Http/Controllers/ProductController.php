@@ -7,12 +7,6 @@ use App\Models\Product;
 
 class ProductController extends Controller
 {
-    
-    public function index()
-    {
-        return view('products.index');
-    }
-
     public function fetchProducts()
     {
         $products = Product::orderBy('created_at', 'desc')->get();
@@ -45,11 +39,26 @@ class ProductController extends Controller
         ]);
 
         $product = Product::find($id);
-        $product->name = $request->name;
-        $product->quantity = $request->quantity;
-        $product->price = $request->price;
-        $product->save();
+        if ($product) {
+            $product->name = $request->name;
+            $product->quantity = $request->quantity;
+            $product->price = $request->price;
+            $product->save();
 
-        return response()->json(['status' => 'success', 'message' => 'Product updated successfully']);
+            return response()->json(['status' => 'success', 'message' => 'Product updated successfully']);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Product not found'], 404);
+    }
+
+    public function destroy($id)
+    {
+        $product = Product::find($id);
+        if ($product) {
+            $product->delete();
+            return response()->json(['status' => 'success', 'message' => 'Product deleted successfully']);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Product not found'], 404);
     }
 }
